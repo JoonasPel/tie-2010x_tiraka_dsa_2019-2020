@@ -5,6 +5,7 @@
 #include <random>
 #include <cmath>
 #include <stdexcept>
+#include <algorithm>
 
 std::minstd_rand rand_engine; // Reasonably quick pseudo-random generator
 
@@ -36,55 +37,120 @@ Datastructures::~Datastructures()
 
 int Datastructures::stop_count()
 {
-    // Replace this comment and the line below with your implementation
-    return NO_VALUE;
+
+    return stops_.size();
 }
 
 void Datastructures::clear_all()
 {
-    // Replace this comment with your implementation
+    stops_.clear();
 }
 
 std::vector<StopID> Datastructures::all_stops()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    std::vector<StopID> stop_IDs;
+
+    for (std::pair stop : stops_) {
+        stop_IDs.push_back(stop.first);
+    }
+
+    return stop_IDs;
 }
 
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+
+    stops_[id] = std::pair<Name,Coord>(name,xy);
+
+    return true;
 }
 
 Name Datastructures::get_stop_name(StopID id)
 {
-    // Replace this comment and the line below with your implementation
-    return NO_NAME;
+    std::string stop_name =  stops_[id].first;
+    return stop_name;
 }
 
 Coord Datastructures::get_stop_coord(StopID id)
 {
-    // Replace this comment and the line below with your implementation
-    return NO_COORD;
+    Coord stop_coord = stops_[id].second;
+    return stop_coord;
 }
 
 std::vector<StopID> Datastructures::stops_alphabetically()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    std::vector<std::pair<Name,StopID>> stop_pairs;
+    std::vector<StopID> alphabetical_stops;
+
+    for (std::pair stop : stops_) {
+
+        stop_pairs.push_back(make_pair(stop.second.first, stop.first));
+    }
+
+    std::sort(stop_pairs.begin(), stop_pairs.end(), [](auto &left, auto&right) {
+        return left.first < right.first; });
+
+    for(auto stop : stop_pairs) {
+        alphabetical_stops.push_back(stop.second);
+    }
+
+    return alphabetical_stops;
+    //return {NO_STOP};
 }
 
 std::vector<StopID> Datastructures::stops_coord_order()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    //Pitkälti hyödynnetty yllä olevaa stops_alphabetically funktiota
+
+    std::vector<std::pair<Coord,StopID>> stop_pairs;
+    std::vector<StopID> alphabetical_stops;
+
+    for (std::pair stop : stops_) {
+
+        stop_pairs.emplace_back(stop.second.second,stop.first);
+    }
+
+    std::sort(stop_pairs.begin(), stop_pairs.end(), [](auto &left, auto&right) {
+        return left.first < right.first; });
+
+    for(auto stop : stop_pairs) {
+        alphabetical_stops.push_back(stop.second);
+    }
+
+    return alphabetical_stops;
+
+    //return {NO_STOP};
 }
 
 StopID Datastructures::min_coord()
 {
-    // Replace this comment and the line below with your implementation
-    return NO_STOP;
+    StopID min_id;
+    double min_distance;
+    double temp_distance;
+
+    /*
+     Tämä yksi looppi tehdään, jotta saadaan smallest-muuttujalle
+     jokin alkuarvo(satunnainen), jotta voidaan tehdä vertailuja oikeassa loopissa.
+    */
+    for (std::pair stop : stops_) {
+        min_id = stop.first;
+        min_distance = distance_from_origo(stop.second.second);
+        break;
+    }
+
+    for(std::pair stop : stops_) {
+
+        temp_distance = distance_from_origo(stop.second.second);
+
+        if(temp_distance < min_distance) {
+
+            min_id = stop.first;
+            min_distance = temp_distance;
+        }
+    }
+
+    return min_id;
+    //return NO_STOP;
 }
 
 StopID Datastructures::max_coord()
@@ -101,14 +167,16 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
 
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    stops_[id].first = newname;
+
+    return true;
 }
 
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    stops_[id].second = newcoord;
+
+    return true;
 }
 
 bool Datastructures::add_region(RegionID id, const Name &name)
@@ -175,4 +243,9 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 {
     // Replace this comment and the line below with your implementation
     return NO_REGION;
+}
+
+double Datastructures::distance_from_origo(Coord coord)
+{
+    return sqrt(pow(coord.x,2) + pow(coord.y,2));
 }

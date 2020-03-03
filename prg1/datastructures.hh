@@ -7,6 +7,7 @@
 #include <vector>
 #include <utility>
 #include <limits>
+#include <unordered_map>
 
 // Types for IDs
 using StopID = long int;
@@ -160,6 +161,11 @@ public:
 
 private:
     // Add stuff needed for your class implementation here
+
+    double distance_from_origo(Coord coord);
+
+    //Tietorakenne pysäkeille.
+    std::unordered_map<int,std::pair<std::string,Coord>> stops_;
 
 };
 
