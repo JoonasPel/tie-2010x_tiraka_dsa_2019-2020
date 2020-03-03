@@ -110,8 +110,11 @@ std::vector<StopID> Datastructures::stops_coord_order()
         stop_pairs.emplace_back(stop.second.second,stop.first);
     }
 
+    //En käytä tässä funktiota distance_from_origo, koska yksinkertaisempi ilman.
     std::sort(stop_pairs.begin(), stop_pairs.end(), [](auto &left, auto&right) {
-        return left.first < right.first; });
+        return sqrt(pow(left.first.x,2) + pow(left.first.y,2)) <
+                sqrt(pow(right.first.x,2) + pow(right.first.y,2));
+    });
 
     for(auto stop : stop_pairs) {
         alphabetical_stops.push_back(stop.second);
@@ -129,14 +132,12 @@ StopID Datastructures::min_coord()
     double temp_distance;
 
     /*
-     Tämä yksi looppi tehdään, jotta saadaan smallest-muuttujalle
-     jokin alkuarvo(satunnainen), jotta voidaan tehdä vertailuja oikeassa loopissa.
+     stops_.begin() ottaa satunnaisen stopin, jonka avulla
+     voidaan alkaa verrata stoppeja ja etsiä pienin coord.
     */
-    for (std::pair stop : stops_) {
-        min_id = stop.first;
-        min_distance = distance_from_origo(stop.second.second);
-        break;
-    }
+    auto random_stop = stops_.begin();
+    min_id = random_stop->first;
+    min_distance = distance_from_origo(random_stop->second.second);
 
     for(std::pair stop : stops_) {
 
@@ -155,14 +156,41 @@ StopID Datastructures::min_coord()
 
 StopID Datastructures::max_coord()
 {
-    // Replace this comment and the line below with your implementation
-    return NO_STOP;
+    StopID max_id;
+    double max_distance;
+    double temp_distance;
+
+    auto random_stop = stops_.begin();
+    max_id = random_stop->first;
+    max_distance = distance_from_origo(random_stop->second.second);
+
+    for(std::pair stop : stops_) {
+
+        temp_distance = distance_from_origo(stop.second.second);
+
+        if(temp_distance > max_distance) {
+
+            max_id = stop.first;
+            max_distance = temp_distance;
+        }
+    }
+
+    return max_id;
+    //return NO_STOP;
 }
 
 std::vector<StopID> Datastructures::find_stops(Name const& name)
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    std::vector<StopID> found_stops = {};
+
+    for (std::pair stop : stops_) {
+        if(stop.second.first == name) {
+            found_stops.push_back(stop.first);
+        }
+    }
+
+    return found_stops;
+    //return {NO_STOP};
 }
 
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
