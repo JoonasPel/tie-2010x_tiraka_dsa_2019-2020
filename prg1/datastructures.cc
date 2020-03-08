@@ -44,6 +44,7 @@ int Datastructures::stop_count()
 void Datastructures::clear_all()
 {
     stops_.clear();
+    regions_.clear();
 }
 
 std::vector<StopID> Datastructures::all_stops()
@@ -59,21 +60,24 @@ std::vector<StopID> Datastructures::all_stops()
 
 bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 {
+    Stop new_stop;
+    new_stop.name = name;
+    new_stop.coord = xy;
 
-    stops_[id] = std::pair<Name,Coord>(name,xy);
+    stops_[id] = new_stop;
 
     return true;
 }
 
 Name Datastructures::get_stop_name(StopID id)
 {
-    std::string stop_name =  stops_[id].first;
+    std::string stop_name =  stops_[id].name;
     return stop_name;
 }
 
 Coord Datastructures::get_stop_coord(StopID id)
 {
-    Coord stop_coord = stops_[id].second;
+    Coord stop_coord = stops_[id].coord;
     return stop_coord;
 }
 
@@ -84,7 +88,7 @@ std::vector<StopID> Datastructures::stops_alphabetically()
 
     for (std::pair stop : stops_) {
 
-        stop_pairs.push_back(make_pair(stop.second.first, stop.first));
+        stop_pairs.push_back(make_pair(stop.second.name, stop.first));
     }
 
     std::sort(stop_pairs.begin(), stop_pairs.end(), [](auto &left, auto&right) {
@@ -107,7 +111,7 @@ std::vector<StopID> Datastructures::stops_coord_order()
 
     for (std::pair stop : stops_) {
 
-        stop_pairs.emplace_back(stop.second.second,stop.first);
+        stop_pairs.emplace_back(stop.second.coord,stop.first);
     }
 
     //En käytä tässä funktiota distance_from_origo, koska yksinkertaisempi ilman.
@@ -137,11 +141,11 @@ StopID Datastructures::min_coord()
     */
     auto random_stop = stops_.begin();
     min_id = random_stop->first;
-    min_distance = distance_from_origo(random_stop->second.second);
+    min_distance = distance_from_origo(random_stop->second.coord);
 
     for(std::pair stop : stops_) {
 
-        temp_distance = distance_from_origo(stop.second.second);
+        temp_distance = distance_from_origo(stop.second.coord);
 
         if(temp_distance < min_distance) {
 
@@ -162,11 +166,11 @@ StopID Datastructures::max_coord()
 
     auto random_stop = stops_.begin();
     max_id = random_stop->first;
-    max_distance = distance_from_origo(random_stop->second.second);
+    max_distance = distance_from_origo(random_stop->second.coord);
 
     for(std::pair stop : stops_) {
 
-        temp_distance = distance_from_origo(stop.second.second);
+        temp_distance = distance_from_origo(stop.second.coord);
 
         if(temp_distance > max_distance) {
 
@@ -184,7 +188,7 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
     std::vector<StopID> found_stops = {};
 
     for (std::pair stop : stops_) {
-        if(stop.second.first == name) {
+        if(stop.second.name == name) {
             found_stops.push_back(stop.first);
         }
     }
@@ -195,46 +199,104 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
 
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
-    stops_[id].first = newname;
+    stops_[id].name = newname;
 
     return true;
 }
 
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
-    stops_[id].second = newcoord;
+    stops_[id].coord = newcoord;
 
     return true;
 }
 
 bool Datastructures::add_region(RegionID id, const Name &name)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    //Etsitään onko annetulla id:llä jo alue olemassa.
+    auto it = std::find_if(regions_.begin(), regions_.end(),
+                           [&id] (region_node& old) {return old.id == id;});
+
+    if(it != regions_.end()) { return false; }
+
+    region_node region;
+    region.id = id;
+    region.name = name;
+
+    regions_.push_back(region);
+    return true;
 }
 
 Name Datastructures::get_region_name(RegionID id)
 {
-    // Replace this comment and the line below with your implementation
+    for (auto region : regions_) {
+        if(region.id == id) {
+            return region.name;
+        }
+    }
     return NO_NAME;
 }
 
 std::vector<RegionID> Datastructures::all_regions()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_REGION};
+    std::vector<RegionID> region_IDs = {};
+
+    for (auto region : regions_) {
+        region_IDs.push_back(region.id);
+    }
+    return region_IDs;
 }
 
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
-    // Replace this comment and the line below with your implementation
+    for(auto region : regions_) {
+        if(region.id == parentid) {
+            region.stops.push_back(id);
+            return true;
+        }
+    }
     return false;
 }
 
 bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+
+    region_node subregion;
+    region_node parentregion;
+
+    int regions_found = 0;
+
+    //Etsitään subregion ja parent region.
+    for(auto region : regions_) {
+
+        if(region.id == parentid) {
+            parentregion = region;
+
+            ++regions_found;//Lopettaa loopin, kun molemmat löytyy.
+            if(regions_found == 2) {break;}
+        }
+
+        if(region.id == id) {
+            subregion = region;
+
+            ++regions_found;//Lopettaa loopin, kun molemmat löytyy.
+            if(regions_found == 2) {break;}
+        }
+
+    }
+
+    //Ei löytynyt molempia alueita tai alialue on jo alialue.
+    if(regions_found < 2 or subregion.is_subregion == true) {
+        return false;
+    }
+
+    //Lisätään parentille subregion.
+    parentregion.subregions.push_back(id);
+
+    //Lisätään subregionille booliksi true.
+    subregion.is_subregion = true;
+
+    return true;
 }
 
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
@@ -277,3 +339,5 @@ double Datastructures::distance_from_origo(Coord coord)
 {
     return sqrt(pow(coord.x,2) + pow(coord.y,2));
 }
+
+

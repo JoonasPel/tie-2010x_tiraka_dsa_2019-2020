@@ -160,12 +160,31 @@ public:
     RegionID stops_common_region(StopID id1, StopID id2);
 
 private:
-    // Add stuff needed for your class implementation here
-
-    double distance_from_origo(Coord coord);
 
     //Tietorakenne pysäkeille.
-    std::unordered_map<int,std::pair<std::string,Coord>> stops_;
+    struct Stop {
+        Name name;
+        Coord coord;
+        RegionID in_region = NO_REGION;
+    };
+
+    std::unordered_map<StopID, Stop> stops_;
+
+
+    //"Puu" tietorakenne regioneille.
+    struct region_node {
+
+        RegionID id;
+        Name name;
+        std::vector<RegionID> subregions;
+        std::vector<StopID> stops;
+        bool is_subregion = false;
+        RegionID parentid;
+
+    };
+    std::vector<region_node> regions_;
+
+    double distance_from_origo(Coord coord);
 
 };
 
