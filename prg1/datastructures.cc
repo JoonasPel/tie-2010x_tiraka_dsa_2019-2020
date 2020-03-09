@@ -290,8 +290,21 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 
 bool Datastructures::remove_stop(StopID id)
 {
-    // Replace this comment and the line below with your implementation
-    return false;
+    if(stops_.find(id) == stops_.end()) { return false; }
+
+    RegionID parentid = stops_[id].in_region;
+
+    //Jos stoppi on regionissa.
+    if(parentid != NO_REGION) {
+
+        //Stopin parent_regionissa oleva vektori, jossa regionin kaikki stopit.
+        std::vector<StopID>& stops = regions_[parentid].stops;
+
+        stops.erase(std::remove(stops.begin(), stops.end(), id), stops.end());
+    }
+    stops_.erase(id);
+
+    return true;
 }
 
 RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
