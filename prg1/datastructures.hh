@@ -168,21 +168,20 @@ private:
         RegionID in_region = NO_REGION;
     };
 
-    std::unordered_map<StopID, Stop> stops_;
+    std::unordered_map<StopID, Stop> stops_ = {};
 
 
     //"Puu" tietorakenne regioneille.
     struct region_node {
 
-        RegionID id;
         Name name;
-        std::vector<RegionID> subregions;
-        std::vector<StopID> stops;
+        std::vector<RegionID> subregions = {};
+        std::vector<StopID> stops = {};
         bool is_subregion = false;
         RegionID parentid;
 
     };
-    std::vector<region_node> regions_;
+    std::unordered_map<RegionID, region_node> regions_;
 
     double distance_from_origo(Coord coord);
 
