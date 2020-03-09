@@ -68,7 +68,7 @@ bool Datastructures::add_stop(StopID id, const Name& name, Coord xy)
 
 Name Datastructures::get_stop_name(StopID id)
 {
-    if(stops_.find(id) != stops_.end()) { return NO_NAME; }
+    if(stops_.find(id) == stops_.end()) { return NO_NAME; }
 
     std::string stop_name =  stops_[id].name;
     return stop_name;
@@ -76,7 +76,7 @@ Name Datastructures::get_stop_name(StopID id)
 
 Coord Datastructures::get_stop_coord(StopID id)
 {
-    if(stops_.find(id) != stops_.end()) { return NO_COORD; }
+    if(stops_.find(id) == stops_.end()) { return NO_COORD; }
 
     Coord stop_coord = stops_[id].coord;
     return stop_coord;
@@ -222,7 +222,7 @@ bool Datastructures::add_region(RegionID id, const Name &name)
 
 Name Datastructures::get_region_name(RegionID id)
 {
-    if(regions_.find(id) != regions_.end()) { return NO_NAME; }
+    if(regions_.find(id) == regions_.end()) { return NO_NAME; }
 
     return regions_[id].name;
 }
@@ -240,57 +240,34 @@ std::vector<RegionID> Datastructures::all_regions()
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
     regions_[parentid].stops.push_back(id);
+    stops_[id].in_region = parentid;
     return true;
 
 }
 
 bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 {
+    regions_[id].is_subregion = true;
+    regions_[id].parentid = parentid;
 
-//    region_node subregion;
-//    region_node parentregion;
+    regions_[parentid].subregions.push_back(id);
 
-//    int regions_found = 0;
-
-//    //Etsitään subregion ja parent region.
-//    for(auto region : regions_) {
-
-//        if(region.first == parentid) {
-//            parentregion. = region;
-
-//            ++regions_found;//Lopettaa loopin, kun molemmat löytyy.
-//            if(regions_found == 2) {break;}
-//        }
-
-//        if(region.first == id) {
-//            subregion = region;
-
-//            ++regions_found;//Lopettaa loopin, kun molemmat löytyy.
-//            if(regions_found == 2) {break;}
-//        }
-
-//    }
-
-//    //Ei löytynyt molempia alueita tai alialue on jo alialue.
-//    if(regions_found < 2 or subregion.is_subregion == true) {
-//        return false;
-//    }
-
-//    //Lisätään parentille subregion.
-//    parentregion.subregions.push_back(id);
-
-//    //Lisätään subregionille booliksi true.
-//    subregion.is_subregion = true;
-
-//    return true;
-
-    return false;
+    return true;
 }
 
 std::vector<RegionID> Datastructures::stop_regions(StopID id)
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_REGION};
+    if(stops_.find(id) == stops_.end()) { return {NO_REGION}; }
+    if(stops_[id].in_region == NO_REGION) { return {}; }
+
+    std::vector<RegionID> regions = {};
+
+    RegionID stop_in_region = stops_[id].in_region;
+    regions.push_back(stop_in_region);
+
+    regions = find_parents_recursive(stop_in_region,regions);
+
+    return regions;
 }
 
 void Datastructures::creation_finished()
@@ -326,6 +303,21 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 double Datastructures::distance_from_origo(Coord coord)
 {
     return sqrt(pow(coord.x,2) + pow(coord.y,2));
+}
+
+std::vector<RegionID> Datastructures::find_parents_recursive(RegionID id, std::vector<RegionID> vec)
+{
+    //Jos regionilla ei ole parentia.
+    if(regions_[id].is_subregion == false) {
+        return vec;
+    } else {
+
+        RegionID parentid = regions_[id].parentid;
+
+        vec.push_back(parentid);
+        return find_parents_recursive(parentid,vec);
+    }
+
 }
 
 

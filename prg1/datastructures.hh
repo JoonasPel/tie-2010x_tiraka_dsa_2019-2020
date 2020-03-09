@@ -185,6 +185,9 @@ private:
 
     double distance_from_origo(Coord coord);
 
+    std::vector<RegionID> find_parents_recursive
+    (RegionID id, std::vector<RegionID> vec);
+
 };
 
 #endif // DATASTRUCTURES_HH
