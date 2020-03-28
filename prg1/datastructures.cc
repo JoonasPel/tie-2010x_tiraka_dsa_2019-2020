@@ -286,7 +286,16 @@ void Datastructures::creation_finished()
 
 std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
 {
-    // Replace this comment and the line below with your implementation
+    //Tähän haetaan regionin ja sen subregioneiden pysäkkien koordinaatit.
+    std::vector<Coord> coords;
+
+    //"Pää" region
+    for(auto x : regions_[id].stops) {
+        coords.push_back(stops_[x].coord);
+    }
+
+    //Subregionit
+
     return {NO_COORD, NO_COORD};
 }
 
@@ -322,9 +331,6 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
     }
 
     return closest;
-
-
-    //return {NO_STOP};
 }
 
 bool Datastructures::remove_stop(StopID id)
@@ -350,8 +356,26 @@ bool Datastructures::remove_stop(StopID id)
 
 RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 {
-    // Replace this comment and the line below with your implementation
-    return NO_REGION;
+    //Onko pysäkit olemassa
+    if(stops_.find(id1) == stops_.end()) { return {NO_REGION}; }
+    if(stops_.find(id2) == stops_.end()) { return {NO_REGION}; }
+
+    //Haetaan pysäkkien regionit käyttäen valmista toteutusta.
+    std::vector<RegionID> stop1_regions = stop_regions(id1);
+    std::vector<RegionID> stop2_regions = stop_regions(id2);
+
+    for(RegionID region_1  : stop1_regions) {
+
+        for(RegionID region_2 : stop2_regions) {
+
+            if(region_1 == region_2) {
+                return region_1;
+            }
+        }
+    }
+
+    //Ei löytynyt samaa
+    return {NO_REGION};
 }
 
 double Datastructures::distance_from_origo(Coord coord)
