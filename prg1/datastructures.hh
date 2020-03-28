@@ -170,7 +170,6 @@ private:
 
     std::unordered_map<StopID, Stop> stops_ = {};
 
-
     //"Puu" tietorakenne regioneille.
     struct region_node {
 
@@ -178,7 +177,7 @@ private:
         std::vector<RegionID> subregions = {};
         std::vector<StopID> stops = {};
         bool is_subregion = false;
-        RegionID parentid;
+        RegionID parentid = NO_REGION;
 
     };
     std::unordered_map<RegionID, region_node> regions_;

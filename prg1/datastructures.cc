@@ -188,18 +188,18 @@ std::vector<StopID> Datastructures::find_stops(Name const& name)
 {
     std::vector<StopID> found_stops = {};
 
-    for (std::pair stop : stops_) {
-        if(stop.second.name == name) {
-            found_stops.push_back(stop.first);
-        }
-    }
+    std::for_each(stops_.begin(), stops_.end(), [&name, &found_stops](auto &it){
+        if (it.second.name == name) {
+            found_stops.push_back(it.first);
+        }});
 
     return found_stops;
-    //return {NO_STOP};
 }
 
 bool Datastructures::change_stop_name(StopID id, const Name& newname)
 {
+    if(stops_.find(id) == stops_.end()) { return false; }
+
     stops_[id].name = newname;
 
     return true;
@@ -207,9 +207,11 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
 
 bool Datastructures::change_stop_coord(StopID id, Coord newcoord)
 {
-    stops_[id].coord = newcoord;
+    if(stops_.find(id) == stops_.end()) { return false; }
 
+    stops_[id].coord = newcoord;
     return true;
+
 }
 
 bool Datastructures::add_region(RegionID id, const Name &name)
@@ -239,14 +241,23 @@ std::vector<RegionID> Datastructures::all_regions()
 
 bool Datastructures::add_stop_to_region(StopID id, RegionID parentid)
 {
+    //Virhetarkastelut
+    if(stops_.find(id) == stops_.end()) { return false; }
+    if(regions_.find(parentid) == regions_.end()) { return false; }
+    if(stops_[id].in_region != NO_REGION) { return false; }
+
     regions_[parentid].stops.push_back(id);
     stops_[id].in_region = parentid;
     return true;
-
 }
 
 bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
 {
+    //Virhetarkastelut
+    if(regions_.find(id) == regions_.end()) { return false; }
+    if(regions_.find(parentid) == regions_.end()) { return false; }
+    if(regions_[id].is_subregion == true) { return false; }
+
     regions_[id].is_subregion = true;
     regions_[id].parentid = parentid;
 
@@ -290,14 +301,16 @@ std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 
 bool Datastructures::remove_stop(StopID id)
 {
+    //Onko pysäkkiä olemassa.
     if(stops_.find(id) == stops_.end()) { return false; }
 
+    //Region, jossa pysäkki on.
     RegionID parentid = stops_[id].in_region;
 
-    //Jos stoppi on regionissa.
+    //Jos pysäkki ei ole NO_REGIONISSA.
     if(parentid != NO_REGION) {
 
-        //Stopin parent_regionissa oleva vektori, jossa regionin kaikki stopit.
+        //Pysäkin parent_regionissa oleva vektori, jossa regionin kaikki stopit.
         std::vector<StopID>& stops = regions_[parentid].stops;
 
         stops.erase(std::remove(stops.begin(), stops.end(), id), stops.end());
@@ -326,7 +339,6 @@ std::vector<RegionID> Datastructures::find_parents_recursive(RegionID id, std::v
     } else {
 
         RegionID parentid = regions_[id].parentid;
-
         vec.push_back(parentid);
         return find_parents_recursive(parentid,vec);
     }
