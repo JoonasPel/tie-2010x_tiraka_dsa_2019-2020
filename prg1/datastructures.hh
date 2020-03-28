@@ -166,6 +166,7 @@ public:
     std::pair<Coord, Coord> region_bounding_box(RegionID id);
 
     // Estimate of performance:
+    // O(log n)
     // Short rationale for estimate:
     std::vector<StopID> stops_closest_to(StopID id);
 

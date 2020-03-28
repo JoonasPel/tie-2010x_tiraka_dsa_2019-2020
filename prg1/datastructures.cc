@@ -199,7 +199,6 @@ bool Datastructures::change_stop_name(StopID id, const Name& newname)
     if(stops_.find(id) == stops_.end()) { return false; }
 
     stops_[id].name = newname;
-
     return true;
 }
 
@@ -293,8 +292,39 @@ std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
 
 std::vector<StopID> Datastructures::stops_closest_to(StopID id)
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    if(stops_.find(id) == stops_.end()) { return {NO_STOP}; }
+
+    //Tähän tallentuu lähimmät pysäkit.
+    std::vector<StopID> closest = {};
+
+    //Koordinaatit, joihin muita pysäkkejä verrataan.
+    int x0 = stops_[id].coord.x;
+    int y0 = stops_[id].coord.y;
+
+
+    std::vector<std::pair<Coord,StopID>> stop_pairs;
+
+    for (std::pair stop : stops_) {
+
+        stop_pairs.emplace_back(stop.second.coord,stop.first);
+    }
+
+    std::sort(stop_pairs.begin(), stop_pairs.end(), [x0,y0](auto &left, auto&right) {
+        return sqrt(pow((left.first.x-x0),2) + pow((left.first.y-y0),2)) <
+                sqrt(pow((right.first.x-x0),2) + pow((right.first.y-y0),2));
+    });
+
+    //Aloitetaan ykkösestä, koska indeksi 0 on parametrina saatu pysäkki.
+    //Lopetetaan, jos pysäkit loppuu kesken tai ollaan saatu 5 lähintä.
+    for(unsigned i=1; i < stop_pairs.size() and i < 6; ++i) {
+
+        closest.push_back(stop_pairs[i].second);
+    }
+
+    return closest;
+
+
+    //return {NO_STOP};
 }
 
 bool Datastructures::remove_stop(StopID id)
