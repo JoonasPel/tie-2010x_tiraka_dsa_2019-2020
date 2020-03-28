@@ -58,27 +58,40 @@ public:
     ~Datastructures();
 
     // Estimate of performance:
+    // O(1)
     // Short rationale for estimate:
+    // Unordered_mapin .size on vakioaikainen
     int stop_count();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // Unordered_mapin .clear on lineaarinen
     void clear_all();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // For-loop O(n), push_back O(1), .first O(1)
     std::vector<StopID> all_stops();
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1).
     bool add_stop(StopID id, Name const& name, Coord xy);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
+    // Sama .find kuin add_stopissa. stops_[id].name pitäisi olla O(1).
     Name get_stop_name(StopID id);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
+    // Sama .find kuin add_stopissa. stops_[id].coord pitäisi olla O(1).
+    // Tämä operaatio on lähes identtinen get_stop_name kanssa.
     Coord get_stop_coord(StopID id);
 
     // We recommend you implement the operations below only after implementing the ones above

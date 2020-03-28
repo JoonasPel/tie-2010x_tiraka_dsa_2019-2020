@@ -70,16 +70,14 @@ Name Datastructures::get_stop_name(StopID id)
 {
     if(stops_.find(id) == stops_.end()) { return NO_NAME; }
 
-    std::string stop_name =  stops_[id].name;
-    return stop_name;
+    return stops_[id].name;
 }
 
 Coord Datastructures::get_stop_coord(StopID id)
 {
     if(stops_.find(id) == stops_.end()) { return NO_COORD; }
 
-    Coord stop_coord = stops_[id].coord;
-    return stop_coord;
+    return stops_[id].coord;
 }
 
 std::vector<StopID> Datastructures::stops_alphabetically()
