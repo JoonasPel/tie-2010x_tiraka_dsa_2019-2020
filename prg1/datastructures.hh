@@ -78,20 +78,19 @@ public:
     // Estimate of performance:
     // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
-    // .find on O(n) joskus, keskimäärin Θ(1).
+    // .find on O(n) joskus(huonoin tapaus), keskimäärin Θ(1).
     bool add_stop(StopID id, Name const& name, Coord xy);
 
     // Estimate of performance:
     // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
-    // Sama .find kuin add_stopissa. stops_[id].name pitäisi olla O(1).
+    // .find on O(n) joskus, keskimäärin Θ(1). stops_[id].name pitäisi olla O(1)
     Name get_stop_name(StopID id);
 
     // Estimate of performance:
     // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
-    // Sama .find kuin add_stopissa. stops_[id].coord pitäisi olla O(1).
-    // Tämä operaatio on lähes identtinen get_stop_name kanssa.
+    // .find on O(n) joskus, keskimäärin Θ(1). stops_[id].coord pitäisi olla O(1)
     Coord get_stop_coord(StopID id);
 
     // We recommend you implement the operations below only after implementing the ones above
@@ -117,11 +116,15 @@ public:
     std::vector<StopID> find_stops(Name const& name);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1).
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1). Nimen vaihto O(1).
     bool change_stop_name(StopID id, Name const& newname);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1).
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1). Koordinaatin vaihto O(1).
     bool change_stop_coord(StopID id, Coord newcoord);
 
     // We recommend you implement the operations below only after implementing the ones above
@@ -131,7 +134,9 @@ public:
     bool add_region(RegionID id, Name const& name);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1). regions_[id].name on O(1)
     Name get_region_name(RegionID id);
 
     // Estimate of performance:
