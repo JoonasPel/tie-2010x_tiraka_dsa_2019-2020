@@ -83,7 +83,7 @@ Coord Datastructures::get_stop_coord(StopID id)
 std::vector<StopID> Datastructures::stops_alphabetically()
 {
     std::vector<std::pair<Name,StopID>> stop_pairs;
-    std::vector<StopID> alphabetical_stops;
+    std::vector<StopID> ordered_stops;
 
     for (std::pair stop : stops_) {
 
@@ -94,11 +94,10 @@ std::vector<StopID> Datastructures::stops_alphabetically()
         return left.first < right.first; });
 
     for(auto stop : stop_pairs) {
-        alphabetical_stops.push_back(stop.second);
+        ordered_stops.push_back(stop.second);
     }
 
-    return alphabetical_stops;
-    //return {NO_STOP};
+    return ordered_stops;
 }
 
 std::vector<StopID> Datastructures::stops_coord_order()
@@ -106,7 +105,7 @@ std::vector<StopID> Datastructures::stops_coord_order()
     //Pitkälti hyödynnetty yllä olevaa stops_alphabetically funktiota
 
     std::vector<std::pair<Coord,StopID>> stop_pairs;
-    std::vector<StopID> alphabetical_stops;
+    std::vector<StopID> ordered_stops;
 
     for (std::pair stop : stops_) {
 
@@ -120,12 +119,10 @@ std::vector<StopID> Datastructures::stops_coord_order()
     });
 
     for(auto stop : stop_pairs) {
-        alphabetical_stops.push_back(stop.second);
+        ordered_stops.push_back(stop.second);
     }
 
-    return alphabetical_stops;
-
-    //return {NO_STOP};
+    return ordered_stops;
 }
 
 StopID Datastructures::min_coord()
@@ -154,7 +151,6 @@ StopID Datastructures::min_coord()
     }
 
     return min_id;
-    //return NO_STOP;
 }
 
 StopID Datastructures::max_coord()
@@ -179,7 +175,6 @@ StopID Datastructures::max_coord()
     }
 
     return max_id;
-    //return NO_STOP;
 }
 
 std::vector<StopID> Datastructures::find_stops(Name const& name)
@@ -295,8 +290,38 @@ std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
     }
 
     //Subregionit
+    std::vector<RegionID> vec = {};
 
-    return {NO_COORD, NO_COORD};
+    vec = find_children_recursive(id, vec);
+
+    for(auto i : vec) {
+
+      for(auto j : regions_[i].stops) {
+
+          coords.push_back(stops_[j].coord);
+      }
+    }
+    //Jos ei löytynyt ollenkaan pysäkkejä, lopetetaan suoritus.
+    if(coords.size() == 0) {return {{NO_COORD},{NO_COORD}};}
+
+    //Alkuarvot, josta lähdetään vertaamaan muihin.
+    int min_x = coords[0].x;
+    int max_x = coords[0].x;
+    int min_y = coords[0].y;
+    int max_y = coords[0].y;
+
+    //Etsitään x- ja y-koordinaattien maksimit ja minimit.
+    //Indeksin 0 pysäkki käydään turhaan, mutta ei vaikuta paljoakaan.
+    for(Coord coord : coords) {
+
+        if(coord.x < min_x) { min_x = coord.x;}
+        if(coord.x > max_x) { max_x = coord.x;}
+        if(coord.y < min_y) { min_y = coord.y;}
+        if(coord.y > max_y) { max_y = coord.y;}
+    }
+
+    return {{min_x, min_y},{max_x, max_y}};
+
 }
 
 std::vector<StopID> Datastructures::stops_closest_to(StopID id)
@@ -396,5 +421,22 @@ std::vector<RegionID> Datastructures::find_parents_recursive(RegionID id, std::v
     }
 
 }
+
+std::vector<RegionID> Datastructures::find_children_recursive(RegionID id, std::vector<RegionID> vec)
+{
+    //Jos regionilla ei ole subregioneita
+    if(regions_[id].subregions.size() == 0) {
+        return vec;
+    } else {
+
+        for(RegionID subregion : regions_[id].subregions) {
+            vec.push_back(subregion);
+            find_children_recursive(subregion, vec);
+        }
+    }
+    return vec;
+}
+
+
 
 

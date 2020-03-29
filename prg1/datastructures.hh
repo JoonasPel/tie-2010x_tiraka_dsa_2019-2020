@@ -130,7 +130,9 @@ public:
     // We recommend you implement the operations below only after implementing the ones above
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1)
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1). Sama pätee alkion lisäykselle.
     bool add_region(RegionID id, Name const& name);
 
     // Estimate of performance:
@@ -204,6 +206,9 @@ private:
     double distance_from_origo(Coord coord);
 
     std::vector<RegionID> find_parents_recursive
+    (RegionID id, std::vector<RegionID> vec);
+
+    std::vector<RegionID> find_children_recursive
     (RegionID id, std::vector<RegionID> vec);
 
 };
