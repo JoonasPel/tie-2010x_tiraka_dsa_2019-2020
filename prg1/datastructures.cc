@@ -6,6 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <QtDebug>
 
 std::minstd_rand rand_engine; // Reasonably quick pseudo-random generator
 
@@ -225,7 +226,7 @@ std::vector<RegionID> Datastructures::all_regions()
 {
     std::vector<RegionID> region_IDs = {};
 
-    for (auto region : regions_) {
+    for (std::pair region : regions_) {
         region_IDs.push_back(region.first);
     }
     return region_IDs;
@@ -250,9 +251,15 @@ bool Datastructures::add_subregion_to_region(RegionID id, RegionID parentid)
     if(regions_.find(parentid) == regions_.end()) { return false; }
     if(regions_[id].is_subregion == true) { return false; }
 
+    //Tarkistetaan ettei synny syklejä.
+    std::vector<RegionID> sub_regions = {};
+    sub_regions = find_parents_recursive(parentid, sub_regions);
+    if(std::find(sub_regions.begin(), sub_regions.end(), id)
+            != sub_regions.end()) { return false; }
+
+    //Lisätään subregion ja muut tarpeelliset tiedot.
     regions_[id].is_subregion = true;
     regions_[id].parentid = parentid;
-
     regions_[parentid].subregions.push_back(id);
 
     return true;
@@ -281,27 +288,29 @@ void Datastructures::creation_finished()
 
 std::pair<Coord,Coord> Datastructures::region_bounding_box(RegionID id)
 {
+    //Jos regionia ei ole olemassa.
+    if(regions_.find(id) == regions_.end()) {return {{NO_COORD},{NO_COORD}};}
+
+
+    //Kaikki regionit tallennetaan tähän. Järjestyksellä ei ole väliä.
+    std::vector<RegionID> vec = {};
+
     //Tähän haetaan regionin ja sen subregioneiden pysäkkien koordinaatit.
     std::vector<Coord> coords;
 
-    //"Pää" region
-    for(auto x : regions_[id].stops) {
-        coords.push_back(stops_[x].coord);
-    }
+    vec = find_children_recursive(id, vec); //Subregionit tallennetaan
+    vec.push_back(id); //Pääregion tallennetaan
 
-    //Subregionit
-    std::vector<RegionID> vec = {};
+    //Käydään regionit ja niiden stopit läpi tallentaen koordinaatit.
+    for(RegionID reg_id : vec) {
 
-    vec = find_children_recursive(id, vec);
+      for(StopID stop_id : regions_[reg_id].stops) {
 
-    for(auto i : vec) {
-
-      for(auto j : regions_[i].stops) {
-
-          coords.push_back(stops_[j].coord);
+          coords.push_back(stops_[stop_id].coord);
       }
     }
-    //Jos ei löytynyt ollenkaan pysäkkejä, lopetetaan suoritus.
+
+    //Jos ei löytynyt ollenkaan pysäkkejä(koordinaatteja), lopetetaan suoritus.
     if(coords.size() == 0) {return {{NO_COORD},{NO_COORD}};}
 
     //Alkuarvot, josta lähdetään vertaamaan muihin.

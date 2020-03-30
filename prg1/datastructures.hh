@@ -96,23 +96,33 @@ public:
     // We recommend you implement the operations below only after implementing the ones above
 
     // Estimate of performance:
+    // O(n*log n)
     // Short rationale for estimate:
+    // Hitain osa on std::sort, joka on O(n*log n)
     std::vector<StopID> stops_alphabetically();
 
     // Estimate of performance:
+    // O(n*log n)
     // Short rationale for estimate:
+    // Sama kun ylempi funktio. Hitain osa on std::sort O(n*log n)
     std::vector<StopID> stops_coord_order();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // For-loop on O(n). Muut toiminnot vakioaikaisia.
     StopID min_coord();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // For-loop on O(n). Muut toiminnot vakioaikaisia.
     StopID max_coord();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // for_each on O(n) tehokkuudeltaan.
     std::vector<StopID> find_stops(Name const& name);
 
     // Estimate of performance:
@@ -142,19 +152,31 @@ public:
     Name get_region_name(RegionID id);
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // For-loop O(n). Muut toiminnot O(1).
     std::vector<RegionID> all_regions();
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1).
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1).
+    // Muut toiminnot O(1) tai keskimäärin Θ(1).
     bool add_stop_to_region(StopID id, RegionID parentid);
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // .find on O(n) joskus, keskimäärin Θ(1). Rekursio on O(n).
+    // Muut toiminnot ovat O(1) tai keskimäärin Θ(1).
     bool add_subregion_to_region(RegionID id, RegionID parentid);
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // .find on huonoimmillaan O(n), keskimäärin Θ(1). Rekursio on O(n)
+    // Käytännössä ohjelmassa ei suuria määriä regioneita lisäillä ainakaan
+    // perfteisteissä, joten päästään usein tehokkuuteen O(log n)
     std::vector<RegionID> stop_regions(StopID id);
 
     // Non-compulsory operations
@@ -164,20 +186,36 @@ public:
     void creation_finished();
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // Loopit ovat lineaarisia ja rekursio on lineaarinen.
+    // Huomioidaan, että myös "tuplalooppi" on lineaarinen, koska käytännössä
+    // se vain käy kaikki stopit kertaalleen läpi.
     std::pair<Coord, Coord> region_bounding_box(RegionID id);
 
     // Estimate of performance:
-    // O(log n)
+    // O(n*log n)
     // Short rationale for estimate:
+    // Loopit ovat lineaarisia, std::sort on (n*log n).
+    // Kuitenkin perftesteissä jostain syystä saadaan tehokkuudeksi O(log n).
+    // Oletetaan kuitenkin, että oikea tehokkuus on O(n*log n)
     std::vector<StopID> stops_closest_to(StopID id);
 
     // Estimate of performance:
+    // O(n) huonoimmassa tapauksessa, keskimäärin Θ(1).
     // Short rationale for estimate:
+    // .find on joskus O(n), keskimäärin Θ(1).
+    // Muut toiminnot O(1) tai keskimäärin Θ(1).
     bool remove_stop(StopID id);
 
     // Estimate of performance:
+    // Huonoimmassa tapauksessa O(n^2), keskimäärin Θ(log n)
     // Short rationale for estimate:
+    // Tuplalooppi, jossa kahden vektorin kaikkia alkioita verrataan toisiinsa.
+    // Huonoimmassa tapauksessa regionit on jaettu kahteen oksaan. Verratut
+    // pysäkit löytyy oksien päistä ja yhteinen region on koko puun juuri
+    // (tai yhteistä ei ole). Käytännössä tämä on ohjelmassa harvinaista.
+    // Keskimääräisesti funktio vaikuttaa olevan logaritminen.
     RegionID stops_common_region(StopID id1, StopID id2);
 
 private:
@@ -205,9 +243,19 @@ private:
 
     double distance_from_origo(Coord coord);
 
+    // Estimate of performance:
+    // O(n)
+    // Short rationale for estimate:
+    // Suoritetaan niin monta kertaa kuin regioneita löytyy.
+    // n on regioneiden määrä samassa oksassa.
     std::vector<RegionID> find_parents_recursive
     (RegionID id, std::vector<RegionID> vec);
 
+    // Estimate of performance:
+    // O(n)
+    // Short rationale for estimate:
+    // Suoritetaan niin monta kertaa kuin regioneita löytyy.
+    // n on regioneiden määrä samassa oksassa.
     std::vector<RegionID> find_children_recursive
     (RegionID id, std::vector<RegionID> vec);
 
