@@ -49,7 +49,7 @@ void Datastructures::clear_all()
 
 std::vector<StopID> Datastructures::all_stops()
 {
-    std::vector<StopID> stop_IDs;
+    std::vector<StopID> stop_IDs =  {};
 
     for (std::pair stop : stops_) {
         stop_IDs.push_back(stop.first);
@@ -84,7 +84,7 @@ Coord Datastructures::get_stop_coord(StopID id)
 std::vector<StopID> Datastructures::stops_alphabetically()
 {
     std::vector<std::pair<Name,StopID>> stop_pairs;
-    std::vector<StopID> ordered_stops;
+    std::vector<StopID> ordered_stops = {};
 
     for (std::pair stop : stops_) {
 
@@ -106,7 +106,7 @@ std::vector<StopID> Datastructures::stops_coord_order()
     //Pitkälti hyödynnetty yllä olevaa stops_alphabetically funktiota
 
     std::vector<std::pair<Coord,StopID>> stop_pairs;
-    std::vector<StopID> ordered_stops;
+    std::vector<StopID> ordered_stops = {};
 
     for (std::pair stop : stops_) {
 
@@ -128,6 +128,8 @@ std::vector<StopID> Datastructures::stops_coord_order()
 
 StopID Datastructures::min_coord()
 {
+    if(stops_.size() == 0) { return NO_STOP;}
+
     StopID min_id;
     double min_distance;
     double temp_distance;
@@ -156,6 +158,8 @@ StopID Datastructures::min_coord()
 
 StopID Datastructures::max_coord()
 {
+    if(stops_.size() == 0) { return NO_STOP;}
+
     StopID max_id;
     double max_distance;
     double temp_distance;
