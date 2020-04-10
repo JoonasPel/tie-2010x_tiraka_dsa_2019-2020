@@ -8,6 +8,7 @@
 #include <tuple>
 #include <utility>
 #include <limits>
+#include <unordered_map>
 
 // Types for IDs
 using StopID = long int;
@@ -237,7 +238,46 @@ public:
     void add_walking_connections(); // Note! This method is completely optional, and not part of any testing
 
 private:
-    // Add stuff needed for your class implementation here
+
+    //Tietorakenne pysäkeille.
+    struct Stop {
+        Name name;
+        Coord coord;
+        RegionID in_region = NO_REGION;
+    };
+
+    std::unordered_map<StopID, Stop> stops_ = {};
+
+    //"Puu" tietorakenne regioneille.
+    struct region_node {
+
+        Name name;
+        std::vector<RegionID> subregions = {};
+        std::vector<StopID> stops = {};
+        bool is_subregion = false;
+        RegionID parentid = NO_REGION;
+
+    };
+    std::unordered_map<RegionID, region_node> regions_;
+
+    double distance_from_origo(Coord coord);
+
+    // Estimate of performance:
+    // O(n)
+    // Short rationale for estimate:
+    // Suoritetaan niin monta kertaa kuin regioneita löytyy.
+    // n on regioneiden määrä samassa oksassa.
+    std::vector<RegionID> find_parents_recursive
+    (RegionID id, std::vector<RegionID> vec);
+
+    // Estimate of performance:
+    // O(n)
+    // Short rationale for estimate:
+    // Suoritetaan niin monta kertaa kuin regioneita löytyy.
+    // n on regioneiden määrä samassa oksassa.
+    std::vector<RegionID> find_children_recursive
+    (RegionID id, std::vector<RegionID> vec);
+
 
 };
 
