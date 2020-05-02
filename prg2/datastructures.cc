@@ -6,6 +6,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <algorithm>
+#include <QDebug>
+#include <climits>
 
 std::minstd_rand rand_engine; // Reasonably quick pseudo-random generator
 
@@ -44,6 +46,7 @@ void Datastructures::clear_all()
 {
     stops_.clear();
     regions_.clear();
+    routes_.clear();
 }
 
 std::vector<StopID> Datastructures::all_stops()
@@ -415,55 +418,314 @@ RegionID Datastructures::stops_common_region(StopID id1, StopID id2)
 
 std::vector<RouteID> Datastructures::all_routes()
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_ROUTE};
+    if(routes_.empty()) { return {NO_ROUTE}; }
+
+    std::vector<RouteID> routeids = {};
+    for(std::pair routeid : routes_) {
+        routeids.push_back(routeid.first);
+    }
+    return routeids;
 }
 
 bool Datastructures::add_route(RouteID id, std::vector<StopID> stops)
 {   
-    // Replace this comment and the line below with your implementation
-    return false;
+    //Virhetarkastelut puuttuu
+
+    routes_[id] = stops;
+
+    //Lisätään myös pysäkeille tieto, että reitti kulkee sen kautta.
+    //Ei lisätä päätepysäkille, koska reitti ei jatku siitä. (siksi size-1)
+    for(unsigned int i=0 ; i< stops.size()-1; i++) {
+        stops_[stops[i]].stop_routes.push_back(id);
+
+        //Pysäkeille tiedot, mihin pysäkkeihin niistä pääsee.
+        StopID from = stops[i];
+        StopID to = stops[i+1];
+        stops_[from].next_stops.push_back({id,to});
+    }
+
+    return true;
 }
 
 std::vector<std::pair<RouteID, StopID>> Datastructures::routes_from(StopID stopid)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_ROUTE, NO_STOP}};
+    std::vector<std::pair<RouteID, StopID>> route_stop = {};
+
+    for(RouteID route : stops_[stopid].stop_routes) {
+
+        auto it = std::find(routes_[route].begin(),
+                            routes_[route].end(), stopid);
+        auto index = std::distance(routes_[route].begin(), it);
+
+        StopID next_stop = routes_[route].at(index+1);
+        route_stop.push_back({route,next_stop});
+
+    }
+
+    return route_stop;
+
+
+    //return {{NO_ROUTE, NO_STOP}};
 }
 
 std::vector<StopID> Datastructures::route_stops(RouteID id)
 {
-    // Replace this comment and the line below with your implementation
-    return {NO_STOP};
+    //Jos reittiä ei löydy.
+    if(routes_.find(id) == routes_.end()) { return {NO_STOP}; }
+
+    return routes_[id];
 }
 
 void Datastructures::clear_routes()
 {
-    // Replace this comment and the line below with your implementation
+    routes_.clear();
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_any(StopID fromstop, StopID tostop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    //Toteutettu BFS-algoritmilla.
+
+    //Tarkistetaan, että pysäkit löytyy.
+    if(stops_.find(fromstop) == stops_.end()) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    } else if (stops_.find(tostop) == stops_.end()) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    std::vector<std::tuple<StopID, RouteID, Distance>> final_route = {};
+
+    reset_stops(false); //falsella matkat asetetaan nollaksi.
+
+    std::vector<StopID> BFS_queue = {};
+    bool found_tostop = false;
+
+    stops_[fromstop].color = 1;
+    BFS_queue.push_back(fromstop);
+
+    while(!BFS_queue.empty()) {
+
+        StopID id = BFS_queue[0];
+        auto *start_ptr = &stops_[id];
+
+        for(auto neighbour : start_ptr->next_stops) {
+
+            auto *neighb_ptr = &stops_[neighbour.second];
+
+            if(neighb_ptr->color == 0) {
+                neighb_ptr->color = 1;
+
+                neighb_ptr->dist_from_start = start_ptr->dist_from_start +
+                        stops_distance(start_ptr->coord,neighb_ptr->coord);
+
+                neighb_ptr->from = id;
+                neighb_ptr->with_route = neighbour.first;
+
+                //Tarkistaa löydettiinkö etsitty määränpää (tostop)
+                if(neighbour.second == tostop) {
+                    found_tostop = true;
+                    break;
+                }
+                BFS_queue.push_back(neighbour.second);
+            }
+        }
+        if(found_tostop) { break; }
+
+        start_ptr->color = 2;
+        BFS_queue.erase(BFS_queue.begin());
+    }
+    //Jos tostopia ei löytynyt (ei ollut reittiä) se on valkoinen.
+    if(stops_[tostop].color == 0) {return {};}
+
+    StopID temp = tostop;
+    RouteID route = NO_ROUTE;
+    auto *stop_ptr = &stops_[temp];
+
+    while(temp != fromstop) {
+        final_route.push_back({temp, route, stop_ptr->dist_from_start});
+        route = stop_ptr->with_route;
+        temp = stop_ptr->from;
+        stop_ptr = &stops_[temp];
+    }
+    final_route.push_back({temp, route, stop_ptr->dist_from_start});
+    std::reverse(final_route.begin(),final_route.end());
+
+    return final_route;
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_least_stops(StopID fromstop, StopID tostop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    //journey_any funktiossa käytin BFS:sää, joka sopii tähänkin hyvin.
+    //Kutsutaan sitä vain tässä, koska turha copypastea.
+    return journey_any(fromstop,tostop);
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_with_cycle(StopID fromstop)
-{
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+{   
+    //Toteutettu DFS-algoritmilla.
+
+    //Tarkistetaan, että pysäkki löytyy.
+    if(stops_.find(fromstop) == stops_.end()) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    std::vector<std::tuple<StopID, RouteID, Distance>> final_route = {};
+    bool cycle_found = false;
+    StopID last_before_cycle = NO_STOP; //vika pysäkki ennen sykliä
+    RouteID route_to_cycle = NO_ROUTE;
+    StopID stop_2nd_time = NO_STOP; //pysäkki joka aiheuttaa syklin.
+    Distance total_dist = 0;
+
+    reset_stops(false); //falsella matkat asetetaan nollaksi.
+
+    std::stack<StopID> DFS_stack = {};
+
+    DFS_stack.push(fromstop);
+
+    while(!DFS_stack.empty()) {
+
+        if(cycle_found) {break;}
+
+        StopID id = DFS_stack.top();
+        auto *start_ptr = &stops_[id];
+        DFS_stack.pop();
+
+        if(start_ptr->color == 0) {
+            start_ptr->color = 1;
+            DFS_stack.push(id);
+
+            for(auto neighbour : start_ptr->next_stops) {
+
+                auto *neighb_ptr = &stops_[neighbour.second];
+
+                if(neighb_ptr->color == 0) {
+
+                    neighb_ptr->dist_from_start = start_ptr->dist_from_start +
+                            stops_distance(start_ptr->coord,neighb_ptr->coord);
+                    neighb_ptr->from = id;
+                    neighb_ptr->with_route = neighbour.first;
+
+                    DFS_stack.push(neighbour.second);
+
+                } else if (neighb_ptr->color == 1) {
+                    //Otetaan ylös syklin aiheuttaman pysäkin tiedot, koska
+                    //ei voida tallentaa pysäkkiin suoraan.
+                    //(Ylikirjoittaisi tiedot ensimmäisestä kerrasta.)
+                    last_before_cycle = id;
+                    route_to_cycle = neighbour.first;
+                    stop_2nd_time = neighbour.second;
+                    total_dist = start_ptr->dist_from_start +
+                            stops_distance(start_ptr->coord,neighb_ptr->coord);
+
+                    cycle_found = true;
+                    break;
+                }
+            }
+        } else {
+            start_ptr->color = 2;
+        }
+    }
+
+    if(!cycle_found) {return {};}
+
+    StopID temp = last_before_cycle;
+    RouteID route = route_to_cycle;
+    auto *stop_ptr = &stops_[temp];
+
+    final_route.push_back({stop_2nd_time, NO_ROUTE, total_dist});
+    while(temp != fromstop) {
+        final_route.push_back({temp, route, stop_ptr->dist_from_start});
+        route = stop_ptr->with_route;
+        temp = stop_ptr->from;
+        stop_ptr = &stops_[temp];
+    }
+    final_route.push_back({temp, route, stop_ptr->dist_from_start});
+    std::reverse(final_route.begin(),final_route.end());
+
+    return final_route;
 }
 
 std::vector<std::tuple<StopID, RouteID, Distance>> Datastructures::journey_shortest_distance(StopID fromstop, StopID tostop)
 {
-    // Replace this comment and the line below with your implementation
-    return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    //Tarkistetaan, että pysäkit löytyy.
+    if(stops_.find(fromstop) == stops_.end()) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    } else if (stops_.find(tostop) == stops_.end()) {
+        return {{NO_STOP, NO_ROUTE, NO_DISTANCE}};
+    }
+
+    reset_stops(true); //truella matkat asetetaan "äärettömäksi".
+
+    std::vector<std::tuple<StopID, RouteID, Distance>> final_route = {};
+    std::priority_queue<std::pair<Distance,StopID>> prio_queue = {};
+
+    auto *from_ptr = &stops_[fromstop];
+    from_ptr->color = 1;
+    from_ptr->dist_from_start = 0;
+    prio_queue.push({from_ptr->dist_from_start,fromstop});
+    bool stop = false;
+
+    while(!prio_queue.empty()) {
+
+        //Tällä loopilla poistetaan dublikaatit/valitaan uusi tila.
+        //Tarkistaa myös tuleeko jonosta ulos tostop. Jos tulee, algo valmis.
+        while(true) {
+
+            std::pair<Distance,StopID> temp = prio_queue.top();
+            temp.first = -temp.first; //Muutetaan negatiivisesta positiiviseksi
+            if(temp.first > stops_[temp.second].dist_from_start){
+                //Löytyi dublikaatti pysäkille, jolle on jo lyhyempi reitti.
+                prio_queue.pop();
+            } else {
+                if(temp.second == tostop) {stop = true;}
+                break;
+            }
+            if(prio_queue.empty()) {
+                stop = true;
+                break;
+            }
+        }
+
+        //Jos priority_queue tyhjeni poistettaessa dublikaatteja.
+        //Tai jos löydettiin maali eli tostop.
+        if(stop) {break;}
+
+        StopID id = prio_queue.top().second;
+        auto *start_ptr = &stops_[id];
+        prio_queue.pop();
+
+        for(auto neighbour : start_ptr->next_stops) {
+
+            auto *neighb_ptr = &stops_[neighbour.second];
+
+            if(neighb_ptr->color == 0) {
+                neighb_ptr->color = 1;
+                //Lisätään arvo negatiivisena, koska jono antaa suurimman ensin.
+                prio_queue.push({-neighb_ptr->dist_from_start,neighbour.second});
+            }
+            if(relax(id, neighbour.second,prio_queue)) {
+                //Löytyi lyhyempi reitti, päivitetään myös route oikeaksi.
+                neighb_ptr->with_route = neighbour.first;
+            }          
+    }
+        start_ptr->color = 2;
+    }
+    //Jos tostopia ei löytynyt (ei ollut reittiä) se on valkoinen.
+    if(stops_[tostop].color == 0) {return {};}
+
+    StopID temp = tostop;
+    RouteID route = NO_ROUTE;
+    auto *stop_ptr = &stops_[temp];
+
+    final_route.push_back({temp, NO_ROUTE, stop_ptr->dist_from_start});
+    while(temp != fromstop) {
+        route = stop_ptr->with_route;
+        temp = stop_ptr->from;
+        stop_ptr = &stops_[temp];
+        final_route.push_back({temp, route, stop_ptr->dist_from_start});
+    }
+    std::reverse(final_route.begin(),final_route.end());
+
+    return final_route;
 }
 
 bool Datastructures::add_trip(RouteID routeid, std::vector<Time> const& stop_times)
@@ -522,5 +784,46 @@ std::vector<RegionID> Datastructures::find_children_recursive(RegionID id, std::
         }
     }
     return vec;
+}
+
+int Datastructures::stops_distance(Coord coord1, Coord coord2)
+{
+    unsigned int distance =
+            sqrt(pow((coord1.x-coord2.x),2) + pow((coord1.y-coord2.y),2));
+    return distance;
+}
+
+void Datastructures::reset_stops(bool dijkstra)
+{
+    Distance value = 0;
+
+    //Dijkstra vaatii matkat "äärettömiksi" eikä nollaksi kuten esim. BFS/DFS
+    if(dijkstra) { value = INT_MAX;}
+
+    for(auto &stop : stops_) {
+        stop.second.color = 0;
+        stop.second.dist_from_start = value;
+        stop.second.from = NO_STOP;
+    }
+}
+
+bool Datastructures::relax(StopID u, StopID v,
+                           std::priority_queue<std::pair<Distance,StopID>>& queue)
+{
+    //Osoittimet vähentämään indeksoinnin määrää.
+    auto *ptr_v = &stops_[v];
+    auto *ptr_u = &stops_[u];
+    Distance u_v_distance = stops_distance(ptr_v->coord,ptr_u->coord);
+
+    if(ptr_v->dist_from_start > ptr_u->dist_from_start + u_v_distance) {
+        ptr_v->dist_from_start = ptr_u->dist_from_start + u_v_distance;
+        ptr_v->from = u;
+
+        //Lisätään priority_queueen pysäkki v uudella isommalla prioriteetilla.
+        queue.push({-ptr_v->dist_from_start, v});
+
+        return true; //Löydettiin lyhyempi reitti
+    }
+    return false;
 }
 

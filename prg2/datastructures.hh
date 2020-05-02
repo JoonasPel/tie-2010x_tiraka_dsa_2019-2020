@@ -9,6 +9,10 @@
 #include <utility>
 #include <limits>
 #include <unordered_map>
+#include <list>
+#include <iterator>
+#include <stack>
+#include <queue>
 
 // Types for IDs
 using StopID = long int;
@@ -244,6 +248,13 @@ private:
         Name name;
         Coord coord;
         RegionID in_region = NO_REGION;
+
+        std::vector<RouteID> stop_routes = {};
+        std::vector<std::pair<RouteID,StopID>> next_stops = {};
+        int color = 0; //"Väri" algoritmeja varten.
+        StopID from = NO_STOP; //Algoritmia varten "leivänmuru". Mistä pysäkistä tultiin.
+        RouteID with_route = NO_ROUTE; //Mitä reittiä pitkin tultiin.
+        Distance dist_from_start = 0;
     };
 
     std::unordered_map<StopID, Stop> stops_ = {};
@@ -278,6 +289,24 @@ private:
     std::vector<RegionID> find_children_recursive
     (RegionID id, std::vector<RegionID> vec);
 
+
+    // Harjoitustyön 2-vaiheen toteutukset
+
+    std::unordered_map<RouteID, std::vector<StopID>> routes_ = {};
+
+    //Harjoitustyön 1-vaiheeseen lisätty pysäkin structiin tieto
+    //reiteistä, johon kyseinen pysäkki kuuluu.
+
+    //Pysäkeille lisätty myös tieto mihin pysäkkeihin niistä pääsee.
+
+    int stops_distance(Coord coord1, Coord coord2);
+
+    //Nollaa pysäkkien värin, matkan lähtöpisteestä ja "leivänmurun".
+    void reset_stops(bool dijkstra);
+
+    //Dijkstra-algoritmin käyttöön
+    bool relax(StopID u, StopID v,
+               std::priority_queue<std::pair<Distance,StopID>>& queue);
 
 };
 
