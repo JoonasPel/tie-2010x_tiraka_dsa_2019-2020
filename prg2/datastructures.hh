@@ -73,7 +73,10 @@ using Distance = int;
 // Return value for cases where Duration is unknown
 Distance const NO_DISTANCE = NO_VALUE;
 
-
+//Solmujen värit algoritmejä varten
+int const WHITE = 0;
+int const GREY = 1;
+int const BLACK = 2;
 
 // This is the class you are supposed to implement
 
@@ -247,8 +250,10 @@ private:
     struct Stop {
         Name name;
         Coord coord;
+        StopID id; //Lisätty prg2:ssa
         RegionID in_region = NO_REGION;
 
+        //Seuraavat lisätty prg2:ssa:
         std::vector<RouteID> stop_routes = {};
         std::vector<std::pair<RouteID,StopID>> next_stops = {};
         int color = 0; //"Väri" algoritmeja varten.
@@ -292,12 +297,16 @@ private:
 
     // Harjoitustyön 2-vaiheen toteutukset
 
-    std::unordered_map<RouteID, std::vector<StopID>> routes_ = {};
+    std::unordered_map<RouteID, std::vector<Stop*>> routes_ = {};
+
+    std::unordered_map<RouteID, std::vector<std::vector<Time>>> trips_ = {};
 
     //Harjoitustyön 1-vaiheeseen lisätty pysäkin structiin tieto
     //reiteistä, johon kyseinen pysäkki kuuluu.
 
     //Pysäkeille lisätty myös tieto mihin pysäkkeihin niistä pääsee.
+
+    //Määritelty värit solmuille(int). 0 = valkoinen, 1 = harmaa, 2 = musta
 
     int stops_distance(Coord coord1, Coord coord2);
 
