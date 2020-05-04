@@ -191,49 +191,80 @@ public:
     // Phase 2 operations
 
     // Estimate of performance:
+    // Θ(n)
     // Short rationale for estimate:
+    // For-loop suoritetaan N kertaa ( N = reittien määrä)
+    // Vektorin push_back on vakioaikainen, paitsi joskus lineaarinen jos
+    // tapahtuu "uudelleenvaraamista". (reallocation)
     std::vector<RouteID> all_routes();
 
     // Estimate of performance:
+    // Θ(n)
     // Short rationale for estimate:
+    // .find on lineaarinen, loopit lineaarisia
     bool add_route(RouteID id, std::vector<StopID> stops);
 
     // Estimate of performance:
+    // Θ(n)
     // Short rationale for estimate:
+    // .find lineaarinen, unordered_mapista haku keskimäärin Θ(1).
     std::vector<std::pair<RouteID, StopID>> routes_from(StopID stopid);
 
     // Estimate of performance:
+    // Θ(n)
     // Short rationale for estimate:
+    // .find lineaarinen, loop lineaarinen, push_back vakioaikainen.
     std::vector<StopID> route_stops(RouteID id);
 
     // Estimate of performance:
+    // O(n^2)
     // Short rationale for estimate:
+    // .clear mapille sekä vektorille on O(n).
+    // Koska toinen .clear on loopissa, saadaan n^2.
     void clear_routes();
 
     // Estimate of performance:
+    // Θ(n). n = pysäkit + reitit
     // Short rationale for estimate:
+    // Alun virhetarkastelut ja lopun while-loop lineaarisia.
+    // BFS on O(V+E), jossa V= pysäkkien määrä ja E= reittien määrä
+    // perftestin perusteellakin lineaarisuus pitää paikkaansa, tosin
+    // isoissa alkiomäärissä (kymmeniätuhansia), vakiokerroin alkaa kasvamaan.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_any(StopID fromstop, StopID tostop);
 
 //    // Non-compulsory operations
 
     // Estimate of performance:
+    // Θ(n). n = pysäkit + reitit
     // Short rationale for estimate:
+    //Tämä kutsuu funktiota journey_any
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_least_stops(StopID fromstop, StopID tostop);
 
     // Estimate of performance:
+    // Θ(n). n = pysäkit
     // Short rationale for estimate:
+    // Alun virhetarkastelu lineaarinen, lopun loop lineaarinen
+    // DFS O(V), jossa V= pysäkkien määrä.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_with_cycle(StopID fromstop);
 
     // Estimate of performance:
+    // Θ(n). n = pysäkit + reitit
     // Short rationale for estimate:
+    // A* algoritmi on O(V+E), V= pysäkkien määrä ja E= reittien määrä
+    // Perftest tukee tätä ja tässäkin algoritmissa vakiokerroin tuntuu
+    // kasvavan alkiomäärien noustessa kymmeniintuhansiin.
     std::vector<std::tuple<StopID, RouteID, Distance>> journey_shortest_distance(StopID fromstop, StopID tostop);
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // .find lineaarinen, push_back vakioaikainen.
     bool add_trip(RouteID routeid, const std::vector<Time> &stop_times);
 
     // Estimate of performance:
+    // O(n)
     // Short rationale for estimate:
+    // .find/.find_if lineaarisia, loop lineaarinen.
     std::vector<std::pair<Time, Duration> > route_times_from(RouteID routeid, StopID stopid);
 
     // Estimate of performance:
@@ -254,12 +285,11 @@ private:
         RegionID in_region = NO_REGION;
 
         //Seuraavat lisätty prg2:ssa:
-        std::vector<RouteID> stop_routes = {};
         std::vector<std::pair<RouteID,StopID>> next_stops = {};
         int color = 0; //"Väri" algoritmeja varten.
-        StopID from = NO_STOP; //Algoritmia varten "leivänmuru". Mistä pysäkistä tultiin.
+        StopID from = NO_STOP; //Algoritmia varten "leivänmuru".
         RouteID with_route = NO_ROUTE; //Mitä reittiä pitkin tultiin.
-        Distance dist_from_start = 0;
+        Distance dist_from_start = 0; //Matka tästä pysäkistä aloituspysäkkiin.
     };
 
     std::unordered_map<StopID, Stop> stops_ = {};
@@ -301,20 +331,18 @@ private:
 
     std::unordered_map<RouteID, std::vector<std::vector<Time>>> trips_ = {};
 
-    //Harjoitustyön 1-vaiheeseen lisätty pysäkin structiin tieto
-    //reiteistä, johon kyseinen pysäkki kuuluu.
-
-    //Pysäkeille lisätty myös tieto mihin pysäkkeihin niistä pääsee.
+    //Stop-structiin lisätty tietoja, joita algoritmit tarvitsevat.
 
     //Määritelty värit solmuille(int). 0 = valkoinen, 1 = harmaa, 2 = musta
 
+    //Laskee kahden pysäkin välisen etäisyyden.
     int stops_distance(Coord coord1, Coord coord2);
 
     //Nollaa pysäkkien värin, matkan lähtöpisteestä ja "leivänmurun".
     void reset_stops(bool dijkstra);
 
-    //Dijkstra-algoritmin käyttöön
-    bool relax(StopID u, StopID v,
+    //A*-algoritmin käyttöön
+    bool relaxA(StopID u, StopID v, StopID tostop,
                std::priority_queue<std::pair<Distance,StopID>>& queue);
 
 };
